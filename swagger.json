@@ -1,0 +1,222 @@
+{
+    "swagger": "2.0",
+    "info": {
+      "title": "REST APIs for UT runner",
+      "version": "1.0.0"
+    },
+    "schemes": [
+      "http",
+      "https"
+    ],
+    "consumes": [
+      "application/json"
+    ],
+    "produces": [
+      "application/json"
+    ],
+    "paths": {
+      "/v1/job": {
+        "post": {
+          "summary": "Start running the UT for a given application",
+          "operationId": "PostJob",
+          "responses": {
+            "200": {
+              "description": "A successful response.",
+              "schema": {
+                "$ref": "#/definitions/unit_testerJobCreateResp"
+              }
+            },
+            "500": {
+              "description": "Internal server error",
+              "schema": {
+                "$ref": "#/definitions/unit_testerError500"
+              }
+            }
+          },
+          "parameters": [
+            {
+              "name": "body",
+              "in": "body",
+              "required": true,
+              "schema": {
+                "$ref": "#/definitions/unit_testerJobCreateReq"
+              }
+            }
+          ],
+          "tags": [
+            "UnitTester"
+          ]
+        }
+      },
+      "/v1/job/logs" :{
+        "post": {
+          "summary": "Export a tar.gz archive with log files for the job",
+          "operationId": "PostJobLogExport",
+          "produces": [
+            "text/plain; charset=utf-8"
+          ],
+          "responses": {
+            "200": {
+              "description": "OK",
+              "schema": {
+                "$ref": "#/definitions/unit_testerJobLogExportResp"
+              }
+            },
+            "500": {
+              "description": "Internal Server Error",
+              "schema": {
+                "$ref": "#/definitions/unit_testerError500"
+              }
+            }
+          },
+          "parameters": [
+            {
+              "in": "body",
+              "name": "job_id",
+              "description": "ID of the job for which logs are to be exported",
+              "required": true,
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "tags": [
+            "UnitTester" 
+          ]
+        }
+      },
+      "/v1/job/{id}": {
+        "get": {
+          "summary": "Get the status of a job.",
+          "operationId": "GetJob",
+          "responses": {
+            "200": {
+              "description": "A successful response.",
+              "schema": {
+                "$ref": "#/definitions/unit_testerJobReadResp"
+              }
+            },
+            "404": {
+              "description": "Invalid job ID"
+            }
+          },
+          "parameters": [
+            {
+              "name": "id",
+              "description": "A unique ID to identify a job.",
+              "in": "path",
+              "required": true,
+              "type": "string"
+            }
+          ],
+          "tags": [
+            "UnitTester"
+          ]
+        },
+      }
+    },
+    "definitions": {
+      "unit_testerJobCreateReq": {
+        "type": "object",
+        "properties": {
+          "app_id": {
+            "type": "string",
+            "title": "ID of the application which is requesting the UT suite"
+          }
+        }
+      },
+      "unit_testerJobCreateResp": {
+        "type": "object",
+        "properties": {
+          "job_id": {
+            "type": "string",
+            "description": "A unique ID to track the job created."
+          },
+          "created_at": {
+            "type": "string",
+            "format": "uint64",
+            "description": "Time at which job got created."
+          }
+        }
+      },
+      "unit_testerJobReadResp": {
+          "type": "object",
+          "properties": {
+            "job_id": {
+              "type": "string",
+              "description": "Unique ID of the job"
+            },
+            "status": {
+              "type": "string",
+              "enum": [
+                "scheduled",
+                "running",
+                "successful",
+                "failed"
+                ],
+              "default": "scheduled",
+              "description": "Current status of the job"
+            },
+            "created_at": {
+              "type": "string",
+              "format": "uint64",
+              "description": "Time at which job was created"
+            },
+            "last_updated_at": {
+              "type": "string",
+              "format": "uint64",
+              "description": "Time at which the job was updated"
+            },
+            "last_update": {
+              "type": "string",
+              "description": "Latest update message for the job"
+            }
+          }
+      },
+      "unit_testerJobLogExportResp": {
+        "type": "object",
+        "properties": {
+          "export": {
+            "type": "string",
+            "description": "Base64 encoded string representing the exported gunzip arhieve",
+            "example": "H4sIAAAAAAAA/+x9e1cbuZJ4/uZT1X/z/zyd5Fvr//4D+9y8W6n+h/hfP4lk8i+dOz/8GAAD//1DGhRIAggAA"
+          }
+        },
+        "description": "ExportResp contains the tar file with all the log files of the job"
+      },
+      "unit_testerError500": {
+        "type": "object",
+        "required": [
+          "code",
+          "severity",
+          "message"
+        ],
+        "properties": {
+          "code": {
+            "type": "string",
+            "description": "HTTP return code",
+            "example": "500"
+          },
+          "severity": {
+            "type": "string",
+            "description": "Error severity level",
+            "enum": [
+              "Critical",
+              "Warning",
+              "Fatal"
+            ]
+          },
+          "message": {
+            "type": "string",
+            "description": "Error message",
+            "example": "top level error string"
+          },
+          "data": {
+            "type": "string",
+            "description": "Details of the error",
+            "example": "detailed description of the error"
+          }
+        }
+      }
+    }
+  }
