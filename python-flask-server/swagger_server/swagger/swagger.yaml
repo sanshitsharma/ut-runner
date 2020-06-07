@@ -1,0 +1,166 @@
+---
+swagger: "2.0"
+info:
+  version: "1.0.0"
+  title: "REST APIs for UT runner"
+schemes:
+- "http"
+- "https"
+consumes:
+- "application/json"
+produces:
+- "application/json"
+paths:
+  /v1/job:
+    post:
+      tags:
+      - "UnitTester"
+      summary: "Start running the UT for a given application"
+      operationId: "post_job"
+      parameters:
+      - in: "body"
+        name: "body"
+        required: true
+        schema:
+          $ref: "#/definitions/unit_testerJobCreateReq"
+      responses:
+        "200":
+          description: "A successful response."
+          schema:
+            $ref: "#/definitions/unit_testerJobCreateResp"
+        "500":
+          description: "Internal server error"
+          schema:
+            $ref: "#/definitions/unit_testerError500"
+      x-swagger-router-controller: "swagger_server.controllers.unit_tester_controller"
+  /v1/job/logs:
+    post:
+      tags:
+      - "UnitTester"
+      summary: "Export a tar.gz archive with log files for the job"
+      operationId: "post_job_log_export"
+      produces:
+      - "text/plain; charset=utf-8"
+      parameters:
+      - in: "body"
+        name: "job_id"
+        description: "ID of the job for which logs are to be exported"
+        required: true
+        schema:
+          type: "string"
+      responses:
+        "200":
+          description: "OK"
+          schema:
+            $ref: "#/definitions/unit_testerJobLogExportResp"
+        "500":
+          description: "Internal Server Error"
+          schema:
+            $ref: "#/definitions/unit_testerError500"
+      x-swagger-router-controller: "swagger_server.controllers.unit_tester_controller"
+  /v1/job/{id}:
+    get:
+      tags:
+      - "UnitTester"
+      summary: "Get the status of a job."
+      operationId: "get_job"
+      parameters:
+      - name: "id"
+        in: "path"
+        description: "A unique ID to identify a job."
+        required: true
+        type: "string"
+      responses:
+        "200":
+          description: "A successful response."
+          schema:
+            $ref: "#/definitions/unit_testerJobReadResp"
+        "404":
+          description: "Invalid job ID"
+      x-swagger-router-controller: "swagger_server.controllers.unit_tester_controller"
+definitions:
+  unit_testerJobCreateReq:
+    type: "object"
+    properties:
+      app_id:
+        type: "string"
+        title: "ID of the application which is requesting the UT suite"
+  unit_testerJobCreateResp:
+    type: "object"
+    properties:
+      job_id:
+        type: "string"
+        description: "A unique ID to track the job created."
+      created_at:
+        type: "string"
+        format: "uint64"
+        description: "Time at which job got created."
+    example:
+      job_id: "job_id"
+      created_at: "created_at"
+  unit_testerJobReadResp:
+    type: "object"
+    properties:
+      job_id:
+        type: "string"
+        description: "Unique ID of the job"
+      status:
+        type: "string"
+        description: "Current status of the job"
+        default: "scheduled"
+        enum:
+        - "scheduled"
+        - "running"
+        - "successful"
+        - "failed"
+      created_at:
+        type: "string"
+        format: "uint64"
+        description: "Time at which job was created"
+      last_updated_at:
+        type: "string"
+        format: "uint64"
+        description: "Time at which the job was updated"
+      last_update:
+        type: "string"
+        description: "Latest update message for the job"
+    example:
+      job_id: "job_id"
+      last_updated_at: "last_updated_at"
+      last_update: "last_update"
+      created_at: "created_at"
+      status: "scheduled"
+  unit_testerJobLogExportResp:
+    type: "object"
+    properties:
+      export:
+        type: "string"
+        example: "H4sIAAAAAAAA/+x9e1cbuZJ4/uZT1X/z/zyd5Fvr//4D+9y8W6n+h/hfP4lk8i+dOz/8GAAD//1DGhRIAggAA"
+        description: "Base64 encoded string representing the exported gunzip arhieve"
+    description: "ExportResp contains the tar file with all the log files of the job"
+  unit_testerError500:
+    type: "object"
+    required:
+    - "code"
+    - "message"
+    - "severity"
+    properties:
+      code:
+        type: "string"
+        example: "500"
+        description: "HTTP return code"
+      severity:
+        type: "string"
+        description: "Error severity level"
+        enum:
+        - "Critical"
+        - "Warning"
+        - "Fatal"
+      message:
+        type: "string"
+        example: "top level error string"
+        description: "Error message"
+      data:
+        type: "string"
+        example: "detailed description of the error"
+        description: "Details of the error"
